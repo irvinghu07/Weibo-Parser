@@ -6,13 +6,6 @@ Created on Sat Sep 19 14:18:47 2020
 @author: hanruo
 """
 
-# -*- coding: utf-8 -*-
-"""
-Spyder Editor
-
-This is a temporary script file.
-"""
-
 import copy
 import aiohttp
 import requests
@@ -22,6 +15,7 @@ import json
 import xlwt
 import nest_asyncio
 import os
+import traceback
 
 
 def get_page():
@@ -33,23 +27,26 @@ def get_page():
     data = {
         'containerid': '100103type=1&q={}'.format(kw),
         'page_type': 'searchall'}
-    resp = requests.get(url=url, headers=headers, params=data)
-    total_page = resp.json()['data']['cardlistInfo']['total']  # 微博总数
-    print(f"找到{total_page}条相关微博")
-    # 一页有10条微博，用总数对10整除，余数为0则页码为总数/10，余数不为0则页码为（总数/10）+1
-    if total_page % 10 == 0:
-        page_num = int(total_page / 10)
-    else:
-        page_num = int(total_page / 10) + 1
-    # 页码为1，data为当前data，页码不为1，通过for循环构建每一页的data参数
-    if page_num == 1:
-        data_list.append(data)
-        return data_list
-    else:
-        for i in range(1, page_num + 1):
-            data['page'] = i
-            data_list.append(copy.deepcopy(data))
-        return data_list
+    try:
+        resp = requests.get(url=url, headers=headers, params=data)
+        total_page = resp.json()['data']['cardlistInfo']['total']  # 微博总数
+        print(f"找到{total_page}条相关微博")
+        # 一页有10条微博，用总数对10整除，余数为0则页码为总数/10，余数不为0则页码为（总数/10）+1
+        if total_page % 10 == 0:
+            page_num = int(total_page / 10)
+        else:
+            page_num = int(total_page / 10) + 1
+        # 页码为1，data为当前data，页码不为1，通过for循环构建每一页的data参数
+        if page_num == 1:
+            data_list.append(data)
+            return data_list
+        else:
+            for i in range(1, page_num + 1):
+                data['page'] = i
+                data_list.append(copy.deepcopy(data))
+            return data_list
+    except requests.RequestException:
+        traceback.print_exc(file=open("error.txt", "a+"))
 
 
 # async定义函数，返回一个协程对象
